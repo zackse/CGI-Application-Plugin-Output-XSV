@@ -25,7 +25,7 @@ our %EXPORT_TAGS= (
   all => [ @EXPORT, @EXPORT_OK ],
 );
 
-our $VERSION= '0.01';
+our $VERSION= '0.02';
 
 ##
 
@@ -606,6 +606,7 @@ which is not applicable to this function.
   });
 
   __END__
+  Foo,Bar,Baz
   2,3,4
 
 =item Pass list of lists (instead of hashes)
