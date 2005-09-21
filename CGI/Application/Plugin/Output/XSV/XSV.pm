@@ -179,7 +179,7 @@ __END__
 
 =head1 NAME
 
-CGI::Application::Plugin::Output::XSV - generate XSV output from a CGI::App runmode
+CGI::Application::Plugin::Output::XSV - generate csv output from a CGI::App runmode
 
 =head1 SYNOPSIS
 
@@ -202,7 +202,7 @@ CGI::Application::Plugin::Output::XSV - generate XSV output from a CGI::App runm
 
 =head1 DESCRIPTION
 
-C<CGI::Application::Plugin::Output::XSV> provides xsv-related routines
+C<CGI::Application::Plugin::Output::XSV> provides csv-related routines
 useful for web applications (via L<Text::CSV_XS|Text::CSV_XS>).
 
 A method, C<xsv_report_web> is exported by default. Three other
@@ -285,7 +285,7 @@ available options.
     filename   => 'members.csv',
   });
 
-This method generates an XSV file that is sent directly to the user's
+This method generates an csv file that is sent directly to the user's
 web browser. It sets the content-type header to 'application/x-csv' and sets
 the content-disposition header to 'attachment'.
 
@@ -448,7 +448,7 @@ if the C<headers_cb> parameter is not supplied.
 
   # do something with $output
 
-This function generates a string containing XSV data and returns it.
+This function generates a string containing csv data and returns it.
 
 This may be useful
 when you want to do some manipulation of the data before sending it to
@@ -641,6 +641,14 @@ documentation for details about what type of input causes a failure.
 =head1 AUTHOR
 
 Evan A. Zacks <evan@commonmind.com>
+
+=head1 BUGS
+
+Please report any bugs or feature requests to
+C<bug-cgi-application-plugin-output-xsv@rt.cpan.org>, or through the web interface at
+L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=CGI-Application-Plugin-Output-XSV>.
+I will be notified, and then you'll automatically be notified of progress on
+your bug as I make changes.
 
 =head1 SEE ALSO
 
