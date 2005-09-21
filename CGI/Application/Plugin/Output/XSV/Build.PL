@@ -20,7 +20,7 @@ my $b = Module::Build->new(
   },
   #create_makefile_pl => 'traditional',
   dist_author => 'Evan A. Zacks <zackse@cpan.org>',
-  dist_abstract => 'Produce XSV output from a CGI::Application runmode',
+  dist_abstract => 'Produce csv output from a CGI::Application runmode',
 );
   
 $b->create_build_script;
