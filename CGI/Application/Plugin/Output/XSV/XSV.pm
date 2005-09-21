@@ -285,7 +285,7 @@ available options.
     filename   => 'members.csv',
   });
 
-This method generates an csv file that is sent directly to the user's
+This method generates a csv file that is sent directly to the user's
 web browser. It sets the content-type header to 'application/x-csv' and sets
 the content-disposition header to 'attachment'.
 
@@ -317,7 +317,7 @@ header. The default is "download.csv".
 =item headers
 
 A reference to an array of column headers to be used as the first row
-of the xsv report.
+of the csv report.
 
 If C<headers> is not supplied (and C<include_headers> is not set
 to a false value), C<headers_cb> will be called with C<fields>
@@ -388,7 +388,7 @@ the field list (C<fields> - reference to an array)
    }
 
 This function, used internally by C<xsv_report>/C<xsv_report_web>,
-formats a list of values for inclusion an xsv file. The return value is
+formats a list of values for inclusion a csv file. The return value is
 from C<< $csv->string() >>, where C<$csv> is a L<Text::CSV_XS(3)|Text::CSV_XS> object.
 
 It takes three parameters:

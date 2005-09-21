@@ -1,7 +1,7 @@
 NAME
     CGI::Application::Plugin::Output::XSV
     
-      Generate XSV output from a CGI::App runmode
+      Generate csv output from a CGI::App runmode
 
 SYNOPSIS
       # in a CGI::Application subclass
@@ -22,7 +22,7 @@ SYNOPSIS
       });
 
 DESCRIPTION
-    "CGI::Application::Plugin::Output::XSV" provides xsv-related routines
+    "CGI::Application::Plugin::Output::XSV" provides csv-related routines
     useful for web applications (via Text::CSV_XS).
 
     A method, "xsv_report_web" is exported by default. Three other
@@ -152,7 +152,7 @@ METHODS
                 content-disposition header. The default is "download.csv".
 
         headers A reference to an array of column headers to be used as the
-                first row of the xsv report.
+                first row of the csv report.
 
                 If "headers" is not supplied (and "include_headers" is not
                 set to a false value), "headers_cb" will be called with
@@ -206,7 +206,7 @@ FUNCTIONS
            }
 
         This function, used internally by "xsv_report"/"xsv_report_web",
-        formats a list of values for inclusion an xsv file. The return value
+        formats a list of values for inclusion a csv file. The return value
         is from "$csv->string()", where $csv is a Text::CSV_XS(3) object.
 
         It takes three parameters:
@@ -254,7 +254,7 @@ FUNCTIONS
 
           # do something with $output
 
-        This function generates a string containing XSV data and returns it.
+        This function generates a string containing csv data and returns it.
 
         This may be useful when you want to do some manipulation of the data
         before sending it to the user's browser or elsewhere. It takes the
