@@ -1,6 +1,10 @@
 Revision history for Perl extension CGI::Application::Plugin::Output::XSV.
 
-0.01  Mon Sep 12 21:22:37 2005
-	- original version; created by h2xs 1.22 with options
-		-AX -n CGI::Application::Plugin::Output::XSV
+0.02  Thu Sep 22 11:26:07 EDT 2005
+        - pod cleanups
+	- updated README
+        - fixed broken tests for older CGI.pm, different Perl versions
 
+0.01  Mon Sep 12 21:22:37 2005
+        - original version; created by h2xs 1.22 with options
+          -AX -n CGI::Application::Plugin::Output::XSV
