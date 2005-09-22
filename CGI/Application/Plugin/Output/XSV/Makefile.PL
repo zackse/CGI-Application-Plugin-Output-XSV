@@ -9,4 +9,5 @@ WriteMakefile(
       'Text::CSV_XS'     => 0,
     },
     'PL_FILES'          => {}, # empty to ignore Build.PL
+    'clean'             => { FILES => "Makefile.old CGI-Application-*.gz" },
 );

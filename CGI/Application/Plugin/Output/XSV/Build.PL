@@ -21,6 +21,7 @@ my $b = Module::Build->new(
   #create_makefile_pl => 'traditional',
   dist_author => 'Evan A. Zacks <zackse@cpan.org>',
   dist_abstract => 'Produce csv output from a CGI::Application runmode',
+  add_to_cleanup => [ 'Makefile.old', 'CGI-Application-*.gz' ],
 );
   
 $b->create_build_script;
