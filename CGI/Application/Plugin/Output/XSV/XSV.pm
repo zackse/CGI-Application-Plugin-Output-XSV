@@ -179,7 +179,7 @@ __END__
 
 =head1 NAME
 
-CGI::Application::Plugin::Output::XSV - generate csv output from a CGI::App runmode
+CGI::Application::Plugin::Output::XSV - generate csv output from a CGI::Application runmode
 
 =head1 SYNOPSIS
 
@@ -640,7 +640,7 @@ documentation for details about what type of input causes a failure.
 
 =head1 AUTHOR
 
-Evan A. Zacks <evan@commonmind.com>
+Evan A. Zacks C<< <evan@commonmind.com> >>
 
 =head1 BUGS
 

@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 9;
+use Test::More tests => 17;
 #use Test::Differences;
 
 use lib './t';
@@ -15,29 +15,29 @@ my $app= XSVTest->new;
 
 ok( my $report= $app->run, 'app runs OK' );
 
-my $expected= qq{Content-disposition: attachment; filename=download.csv\r
-Content-Type: application/x-csv\r
-\r
+my $expected= qr{(?i)Content-disposition(?-i): attachment; filename=download.csv\s+
+Content-Type: application/x-csv\s+
+\s+
 fOO,bAR,bAZ
 1,2,3
 };
 
 #eq_or_diff $report, $expected;
-is( $report, $expected, "report output (hash input) matches" );
+like( $report, $expected, "report output (hash input) matches" );
 
 $app= XSVTest->new( PARAMS => { filename => 'myfilename.csv' } );
 
 ok( $report= $app->run, 'app runs OK' );
 
-$expected= qq{Content-disposition: attachment; filename=myfilename.csv\r
-Content-Type: application/x-csv\r
-\r
+$expected= qr{(?i)Content-disposition(?-i): attachment; filename=myfilename.csv\s+
+Content-Type: application/x-csv\s+
+\s+
 fOO,bAR,bAZ
 1,2,3
 };
 
 #eq_or_diff $report, $expected;
-is( $report, $expected, "report output matches (user-specified filename)" );
+like( $report, $expected, "report output matches (user-specified filename)" );
 
 $report= $app->xsv_report_web({
   values          => [
@@ -123,5 +123,19 @@ $expected= q{Phone,"Last Name","First Name"
 555-1515,Rizzo,Frank
 };
 
-is( $report, $expected, "report output (hash input) matches" );
+my @rows= split /\n/ => $expected;
 
+foreach my $h ( "Phone","Last Name","First Name" ) {
+  ok( index($rows[0], $h) > -1 ,
+      "report output includes header field [$h]" );
+}
+
+foreach my $f ( "555-1212","Tors","Jack" ) {
+  ok( index($rows[1], $f) > -1 ,
+      "report output, first row includes field [$f]" );
+}
+
+foreach my $f ( "555-1515","Rizzo","Frank" ) {
+  ok( index($rows[2], $f) > -1 ,
+      "report output, first row includes field [$f]" );
+}

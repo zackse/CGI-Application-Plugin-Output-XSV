@@ -1,7 +1,7 @@
 NAME
     CGI::Application::Plugin::Output::XSV
     
-      Generate csv output from a CGI::App runmode
+      Generate csv output from a CGI::Application runmode
 
 SYNOPSIS
       # in a CGI::Application subclass
