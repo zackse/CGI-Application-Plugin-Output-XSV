@@ -216,8 +216,8 @@ You may export all four routines by specifying the export tag C<:all>:
 =head1 PURPOSE
 
 On many websites, I had code to retrieve a list of data items for use
-in an L<HTML::Template(3)|HTML::Template> TMPL_LOOP. Usually this code
-would use the L<DBI(3)|DBI> routine C<fetchall_arrayref( {} )> to get a
+in an L<HTML::Template|HTML::Template(3)> TMPL_LOOP. Usually this code
+would use the L<DBI|DBI(3)> routine C<fetchall_arrayref( {} )> to get a
 list of hash references, one for each data item.
 
   my $users= $sth->fetchall_arrayref( {} );
@@ -252,7 +252,7 @@ The purpose of this module is to provide a simple method, C<xsv_report_web>,
 that wraps the above code while offering enough programmer flexibility.
 
 For example, the programmer may control the naming of header columns,
-filter each line of output before it is passed to L<Text::CSV_XS(3)|Text::CSV_XS>,
+filter each line of output before it is passed to L<Text::CSV_XS|Text::CSV_XS(3)>,
 and set the filename that is supplied to the user's browser.
 
 Please see the documentation below for C<xsv_report_web> for a list of
@@ -290,7 +290,7 @@ web browser. It sets the content-type header to 'application/x-csv' and sets
 the content-disposition header to 'attachment'.
 
 It should be invoked through a
-L<CGI::Application(3)|CGI::Application> subclass object.
+L<CGI::Application|CGI::Application(3)> subclass object.
 
 It takes a reference to a hash of named parameters. All except for
 C<values> are optional:
@@ -342,7 +342,7 @@ The default is true.
 =item values
 
 A reference to an array of hash references (such as
-that returned by the L<DBI(3)|DBI> C<fetchall_arrayref( {} )> routine, or
+that returned by the L<DBI|DBI(3)> C<fetchall_arrayref( {} )> routine, or
 a reference to an array of list references.
 
 This argument is required.
@@ -389,7 +389,7 @@ the field list (C<fields> - reference to an array)
 
 This function, used internally by C<xsv_report>/C<xsv_report_web>,
 formats a list of values for inclusion a csv file. The return value is
-from C<< $csv->string() >>, where C<$csv> is a L<Text::CSV_XS(3)|Text::CSV_XS> object.
+from C<< $csv->string() >>, where C<$csv> is a L<Text::CSV_XS|Text::CSV_XS(3)> object.
 
 It takes three parameters:
 
@@ -397,7 +397,7 @@ It takes three parameters:
 
 =item *
 
-A L<Text::CSV_XS(3)|Text::CSV_XS> object
+A L<Text::CSV_XS|Text::CSV_XS(3)> object
 
 =item *
 
@@ -409,7 +409,7 @@ The line ending
 
 =back
 
-On an error from L<Text::CSV_XS(3)|Text::CSV_XS>, the function raises an exception.
+On an error from L<Text::CSV_XS|Text::CSV_XS(3)>, the function raises an exception.
 
 On receiving an empty list of values, the function returns the
 line ending only.
@@ -633,14 +633,14 @@ which is not applicable to this function.
 =over 4
 
 The function C<add_to_xsv> will raise an exception when
-C<< Text::CSV_XS->combine >> fails. Please see the L<Text::CSV_XS(3)|Text::CSV_XS>
+C<< Text::CSV_XS->combine >> fails. Please see the L<Text::CSV_XS|Text::CSV_XS(3)>
 documentation for details about what type of input causes a failure.
 
 =back
 
 =head1 AUTHOR
 
-Evan A. Zacks C<< <evan@commonmind.com> >>
+Evan A. Zacks C<< <zackse@cpan.org> >>
 
 =head1 BUGS
 
@@ -652,7 +652,7 @@ your bug as I make changes.
 
 =head1 SEE ALSO
 
-L<Text::CSV_XS(3)>, L<CGI::Application(3)>
+L<Text::CSV_XS>, L<CGI::Application>
 
 =head1 COPYRIGHT AND LICENSE
 

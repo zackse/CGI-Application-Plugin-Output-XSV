@@ -83,7 +83,7 @@ throws_ok { add_to_xsv( $csv ) }
           'add_to_xsv: missing fields param raises exception';
 
 SKIP: {
-  skip "Need Test::MockObject", 1
+  skip "Need Test::MockObject to test Text::CSV_XS failure", 1
     unless $mock;
 
   throws_ok { add_to_xsv( $csv, [[1]] ) }
