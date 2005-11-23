@@ -1,2 +1,2 @@
-pod2*
+^pod2
 Makefile.old
