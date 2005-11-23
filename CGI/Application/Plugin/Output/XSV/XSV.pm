@@ -25,7 +25,7 @@ our %EXPORT_TAGS= (
   all => [ @EXPORT, @EXPORT_OK ],
 );
 
-our $VERSION= '0.02';
+our $VERSION= '0.03';
 
 ##
 
@@ -150,10 +150,10 @@ sub clean_field_names {
   my $fields= shift;
 
   # using temp var to avoid modifying $fields
+  my @fields_copy= @$fields;
+
   return [
-    map {
-      my $f= $_; $f =~ tr/_/ /; $f =~ s/\b(\w+)/\u$1/g; $f
-    } @$fields
+    map { tr/_/ /; s/\b(\w+)/\u$1/g; $_ } @fields_copy
   ];
 }
 
@@ -249,7 +249,8 @@ almost always looked the same:
     return $output;
 
 The purpose of this module is to provide a simple method, C<xsv_report_web>,
-that wraps the above code while offering enough programmer flexibility.
+that wraps the above code while offering a fair amount of programmer
+flexibility.
 
 For example, the programmer may control the naming of header columns,
 filter each line of output before it is passed to L<Text::CSV_XS|Text::CSV_XS(3)>,
@@ -297,9 +298,18 @@ C<values> are optional:
 
 =over 8
 
+=item csv_opts
+
+  csv_opts   => { sep_char => "\t" },
+
+A reference to a hash of options passed to the constructor of
+L<Text::CSV_XS|Text::CSV_XS(3)>. The default is an empty hash.
+
 =item fields
 
-A reference to an array of field names or array indices. This parameter
+  fields => [ qw(member_id first_name last_name) ],
+
+A reference to a list of field names or array indices. This parameter
 specifies the order of fields in each row of output.
 
 If C<fields> is not supplied, a list will be generated using the first
@@ -311,12 +321,16 @@ the same as the data provided.
 
 =item filename
 
+  filename => 'members.csv',
+
 The name of the file which will be sent in the HTTP content-disposition
 header. The default is "download.csv".
 
 =item headers
 
-A reference to an array of column headers to be used as the first row
+  headers => [ "Member ID", "First Name", "Last Name" ],
+
+A reference to a list of column headers to be used as the first row
 of the csv report.
 
 If C<headers> is not supplied (and C<include_headers> is not set
@@ -325,29 +339,67 @@ as a parameter to generate column headers.
 
 =item headers_cb
 
+  # replace underscores with spaces
+  headers_cb => sub {
+    my $fields= shift;
+
+    # using temp var to avoid modifying $fields
+    my @fields_copy= @$fields;
+
+    return [
+      map { tr/_/ /; $_ } @fields_copy
+    ];
+  },
+
 A reference to a subroutine used to generate column
 headers from the field names.
 
 A default routine is provided in C<clean_field_names>. This
 function is passed the list of fields (C<fields>) as a parameter
-and should return a reference to an array of column headers.
+and should return a reference to a list of column headers.
 
 =item include_headers
+
+  include_headers => 1,
 
 A true or false value indicating whether to include C<headers>
 (or automatically generated headers) as the first row of output.
 
 The default is true.
 
+=item line_ending
+
+  line_ending     => "\n",
+
+The value appended to each line of csv output. The default is "\n".
+
 =item values
 
-A reference to an array of hash references (such as
+  values => [
+    { member_id  => 1,
+      first_name => 'Chuck',
+      last_name  => 'Barry', },
+  ],
+
+  # or a list of lists
+  values => [
+    [ 1, 'Chuck', 'Barry', ],
+  ],
+
+A reference to a list of hash references (such as
 that returned by the L<DBI|DBI(3)> C<fetchall_arrayref( {} )> routine, or
-a reference to an array of list references.
+a reference to a list of list references.
 
 This argument is required.
 
 =item get_row_cb
+
+  # uppercase all values -- assumes values are hash references
+  get_row_cb => sub {
+    my( $row, $fields )= @_;
+
+    return [ map { uc } @$row{@$fields} ];
+  },
 
 A reference to a subroutine used to generate each row of output
 (other than the header row). Default routines are provided that
@@ -359,11 +411,11 @@ This subroutine is passed two parameters for each row:
 
 =item *
 
-the current row (reference to an array)
+the current row (reference to a list of hashes or lists)
 
 =item *
 
-the field list (C<fields> - reference to an array)
+the field list (C<fields> - reference to a list of hash keys or array indices)
 
 =back
 
@@ -414,7 +466,8 @@ On an error from L<Text::CSV_XS|Text::CSV_XS(3)>, the function raises an excepti
 On receiving an empty list of values, the function returns the
 line ending only.
 
-XXX should this return a formatted list of empty fields?
+Should this return a formatted list of empty fields? Let me know if you
+think that would be better.
 
 =item B<clean_field_names>
 

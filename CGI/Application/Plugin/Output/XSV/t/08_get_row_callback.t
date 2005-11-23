@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 3;
+use Test::More tests => 4;
 
 BEGIN {
   use_ok( 'CGI::Application::Plugin::Output::XSV', qw(xsv_report) );
@@ -38,3 +38,19 @@ $report= xsv_report({
 });
 
 is( $report, "Jolly,42\n", "rows are retrieved using user callback" );
+
+sub uppercase {
+  my( $row, $fields )= @_;
+
+  return [ map { uc } @$row{@$fields} ];
+};
+
+$report= xsv_report({
+  fields          => [ qw(first second third) ],
+  values          => [ { first => 'foo', second => 'bar', third => 'baz' }, ],
+  get_row_cb      => \&uppercase,
+  include_headers => 0,
+});
+
+is( $report, "FOO,BAR,BAZ\n", "rows are retrieved using user callback" );
+
