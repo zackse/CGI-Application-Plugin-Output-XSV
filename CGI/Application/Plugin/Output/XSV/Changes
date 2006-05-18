@@ -1,5 +1,9 @@
 Revision history for Perl extension CGI::Application::Plugin::Output::XSV.
 
+0.03  Wed Nov 23 2005
+        - pod cleanups
+        - several more tests
+
 0.02  Thu Sep 22 11:26:07 EDT 2005
         - pod cleanups
 	- updated README
