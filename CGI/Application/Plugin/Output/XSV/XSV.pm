@@ -270,7 +270,7 @@ available options.
   my @members= (
     { member_id  => 1,
       first_name => 'Chuck',
-      last_name  => 'Barry', },
+      last_name  => 'Berry', },
     ...
   );
 
@@ -378,12 +378,12 @@ The value appended to each line of csv output. The default is "\n".
   values => [
     { member_id  => 1,
       first_name => 'Chuck',
-      last_name  => 'Barry', },
+      last_name  => 'Berry', },
   ],
 
   # or a list of lists
   values => [
-    [ 1, 'Chuck', 'Barry', ],
+    [ 1, 'Chuck', 'Berry', ],
   ],
 
 A reference to a list of hash references (such as
