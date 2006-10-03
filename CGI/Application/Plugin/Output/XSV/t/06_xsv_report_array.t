@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 4;
+use Test::More tests => 5;
 
 BEGIN {
   use_ok( 'CGI::Application::Plugin::Output::XSV', qw(xsv_report) );
@@ -41,3 +41,10 @@ $report= xsv_report({
 
 is( $report, "two,three,one\n2,3,1\n",
     "report output matches (specify field order)" );
+
+$report= xsv_report({
+  fields    => [ qw(foo bar baz) ],
+  values    => [ ],
+});
+
+is( $report, "Foo,Bar,Baz\n", "report output (empty list) matches" );

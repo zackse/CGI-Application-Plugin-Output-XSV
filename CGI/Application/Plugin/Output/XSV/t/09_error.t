@@ -51,13 +51,9 @@ throws_ok { xsv_report({ fields => [ 1 ], values => [ \*_ ] }) }
           qr/unknown list type \[GLOB\]/i,
           'xsv_report: invalid list type raises exception';
 
-throws_ok { xsv_report({ fields => [ 1 ], values => [ \*_ ] }) }
-          qr/unknown list type \[GLOB\]/i,
-          'xsv_report: invalid list type raises exception';
-
 throws_ok { xsv_report({ values => \@_ }) }
           qr/values is an empty list/i,
-          'xsv_report: empty values list raises exception';
+          'xsv_report: empty values list without fields list raises exception';
 
 throws_ok { xsv_report({ values => [[1]], headers_cb => undef }) }
           qr/need headers or headers_cb/i,
@@ -70,6 +66,20 @@ throws_ok { xsv_report({ values => [[1]], headers_cb => 1 }) }
 throws_ok { xsv_report({ values => [[1]], headers_cb => sub { 0 } }) }
           qr/can't generate headers/i,
           'xsv_report: empty return from headers_cb raises exception';
+
+# need to unmock for single test
+if ( $mock ) {
+  $mock->set_true('combine');
+  $mock->set_true('string');
+}
+
+lives_ok  { xsv_report({ fields => [ qw(foo) ], values => [] }) }
+          'xsv_report: empty values list is OK';
+
+# reapply mock
+if ( $mock ) {
+  $mock->set_false( 'combine' );
+}
 
 # really a mock object
 my $csv= Text::CSV_XS->new();

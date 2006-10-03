@@ -25,7 +25,7 @@ our %EXPORT_TAGS= (
   all => [ @EXPORT, @EXPORT_OK ],
 );
 
-our $VERSION= '0.03';
+our $VERSION= '0.9';
 
 ##
 
@@ -73,7 +73,7 @@ sub xsv_report {
     }
   }
   else {
-    croak "values is an empty list, aborting";
+    croak "can't determine field names (values is an empty list), aborting";
   }
 
   # function to retrieve each row of data from $opts{values}
@@ -82,7 +82,7 @@ sub xsv_report {
   if( $opts{get_row_cb} ) {
     $get_row= $opts{get_row_cb};
   }
-  else {
+  elsif ( @{ $opts{values} } ) {
     my $list_type= ref( $opts{values}[0] );
 
     if( $list_type eq 'HASH' ) {
@@ -94,6 +94,10 @@ sub xsv_report {
     else {
       croak "unknown list type [$list_type]";
     }
+  }
+  else {
+    # empty values list -- always return empty list
+    $get_row= sub { return [] };
   }
 
   my $csv= Text::CSV_XS->new( $opts{csv_opts} );

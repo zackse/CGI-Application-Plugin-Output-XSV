@@ -1,5 +1,10 @@
 Revision history for Perl extension CGI::Application::Plugin::Output::XSV.
 
+0.9   Mon Oct  2 23:27:44 2006
+        - fixed bug where empty values list would raise exception
+        - additional tests
+        - removed duplicate test
+
 0.03  Wed Nov 23 2005
         - pod cleanups
         - several more tests

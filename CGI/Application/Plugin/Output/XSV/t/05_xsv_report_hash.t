@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 5;
+use Test::More tests => 6;
 
 BEGIN {
   use_ok( 'CGI::Application::Plugin::Output::XSV', qw(xsv_report) );
@@ -49,3 +49,10 @@ $report= xsv_report({
 });
 
 ok( $report, "defaults generated for fields when not provided" );
+
+$report= xsv_report({
+  fields    => [ qw(foo bar baz) ],
+  values    => [ ],
+});
+
+is( $report, "Foo,Bar,Baz\n", "report output (empty list) matches" );
