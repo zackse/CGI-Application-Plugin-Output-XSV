@@ -274,11 +274,24 @@ METHODS
                 ("fields") as a parameter and should return a reference to a
                 list (which will be passed to "add_to_xsv()").
 
+                It will be called repeatedly to generate each row of data
+                until it returns a false value.
+
                 This may be preferred to "values" when the data set is large
                 or expensive to generate up-front. Thanks to Mark Stosberg
                 for suggesting this option.
 
                 Either this argument or "values" must be provided.
+
+        maximum_iters
+                  maximum_iters => 1_000_000,
+
+                This is the maximum number of times the "iterator" will be
+                called before an exception is raised. This is a basic
+                stopgap to prevent a runaway iterator that never returns
+                false.
+
+                The default is one million.
 
         get_row_cb
                   # uppercase all values -- assumes values are hash references
