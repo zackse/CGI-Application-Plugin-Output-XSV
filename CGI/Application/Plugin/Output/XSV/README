@@ -1,11 +1,10 @@
 NAME
-    CGI::Application::Plugin::Output::XSV
-    
-      Generate csv output from a CGI::Application runmode
+    CGI::Application::Plugin::Output::XSV - generate csv output from a
+    CGI::Application runmode
 
 SYNOPSIS
-      # in a CGI::Application subclass
       use CGI::Application::Plugin::Output::XSV;
+      ...
 
       # in some runmode...
 
@@ -17,6 +16,20 @@ SYNOPSIS
       return $self->xsv_report_web({
         fields     => \@headers,
         values     => $members,
+        csv_opts   => { sep_char => "\t" },
+        filename   => 'members.csv',
+      });
+
+      # or, generate the list on the fly:
+
+      sub get_members {
+        while ( my $list_ref = $sth->fetchrow_arrayref() ) {
+          return $list_ref;
+        }
+      }
+
+      return $self->xsv_report_web({
+        iterator   => \&get_members,
         csv_opts   => { sep_char => "\t" },
         filename   => 'members.csv',
       });
@@ -59,9 +72,9 @@ This module requires these other modules and libraries:
 
 PURPOSE
     On many websites, I had code to retrieve a list of data items for use in
-    an HTML::Template(3) TMPL_LOOP. Usually this code would use the DBI(3)
-    routine "fetchall_arrayref( {} )" to get a list of hash references, one
-    for each data item.
+    an HTML::Template TMPL_LOOP. Usually this code would use the DBI routine
+    "fetchall_arrayref( {} )" to get a list of hash references, one for each
+    data item.
 
       my $users= $sth->fetchall_arrayref( {} );
 
@@ -92,24 +105,26 @@ PURPOSE
         return $output;
 
     The purpose of this module is to provide a simple method,
-    "xsv_report_web", that wraps the above code while offering enough
-    programmer flexibility.
+    "xsv_report_web", that wraps the above code while offering a fair amount
+    of programmer flexibility.
 
     For example, the programmer may control the naming of header columns,
-    filter each line of output before it is passed to Text::CSV_XS(3), and
-    set the filename that is supplied to the user's browser.
+    filter each line of output before it is passed to Text::CSV_XS, and set
+    the filename that is supplied to the user's browser.
 
     Please see the documentation below for "xsv_report_web" for a list of
     available options.
 
 METHODS
     xsv_report_web
+          ## METHOD 1. Pre-generated list of values for csv
+
           # in a runmode
 
           my @members= (
             { member_id  => 1,
               first_name => 'Chuck',
-              last_name  => 'Barry', },
+              last_name  => 'Berry', },
             ...
           );
 
@@ -125,18 +140,45 @@ METHODS
             filename   => 'members.csv',
           });
 
-        This method generates an XSV file that is sent directly to the
-        user's web browser. It sets the content-type header to
-        'application/x-csv' and sets the content-disposition header to
-        'attachment'.
+          ## METHOD 2. Generate list on the fly
 
-        It should be invoked through a CGI::Application(3) subclass object.
+          # in a runmode
+
+          sub get_members {
+            while ( my $list_ref = $sth->fetchrow_arrayref() ) {
+              return $list_ref;
+            }
+          }
+
+          my @headers= ("Member ID", "First Name", "Last Name");
+
+          return $self->xsv_report_web({
+            headers    => \@headers,
+            iterator   => \&get_members,
+            csv_opts   => { sep_char => "\t" },
+            filename   => 'members.csv',
+          });
+
+        This method generates a csv file that is sent directly to the user's
+        web browser. It sets the content-type header to 'application/x-csv'
+        and sets the content-disposition header to 'attachment'.
+
+        It should be invoked through a CGI::Application subclass object.
 
         It takes a reference to a hash of named parameters. All except for
-        "values" are optional:
+        "values" or "iterator" are optional:
 
-        fields  A reference to an array of field names or array indices.
-                This parameter specifies the order of fields in each row of
+        csv_opts
+                  csv_opts   => { sep_char => "\t" },
+
+                A reference to a hash of options passed to the constructor
+                of Text::CSV_XS. The default is an empty hash.
+
+        fields
+                  fields => [ qw(member_id first_name last_name) ],
+
+                A reference to a list of field names or array indices. This
+                parameter specifies the order of fields in each row of
                 output.
 
                 If "fields" is not supplied, a list will be generated using
@@ -147,11 +189,19 @@ METHODS
                 of lists, the field order will be the same as the data
                 provided.
 
+                If "fields" is not supplied and "iterator" is used instead
+                of "values", the field list will be empty.
+
         filename
+                  filename => 'members.csv',
+
                 The name of the file which will be sent in the HTTP
                 content-disposition header. The default is "download.csv".
 
-        headers A reference to an array of column headers to be used as the
+        headers
+                  headers => [ "Member ID", "First Name", "Last Name" ],
+
+                A reference to a list of column headers to be used as the
                 first row of the csv report.
 
                 If "headers" is not supplied (and "include_headers" is not
@@ -159,28 +209,85 @@ METHODS
                 "fields" as a parameter to generate column headers.
 
         headers_cb
+                  # replace underscores with spaces
+                  headers_cb => sub {
+                    my $fields= shift;
+
+                    # using temp var to avoid modifying $fields
+                    my @fields_copy= @$fields;
+
+                    return [
+                      map { tr/_/ /; $_ } @fields_copy
+                    ];
+                  },
+
                 A reference to a subroutine used to generate column headers
                 from the field names.
 
                 A default routine is provided in "clean_field_names". This
-                function is passed the list of fields ("fields") as a
-                parameter and should return a reference to an array of
-                column headers.
+                function is passed a reference to the list of fields
+                ("fields") as a parameter and should return a reference to a
+                list of column headers.
 
         include_headers
+                  include_headers => 1,
+
                 A true or false value indicating whether to include
                 "headers" (or automatically generated headers) as the first
                 row of output.
 
                 The default is true.
 
-        values  A reference to an array of hash references (such as that
-                returned by the DBI(3) "fetchall_arrayref( {} )" routine, or
-                a reference to an array of list references.
+        line_ending
+                  line_ending     => "\n",
 
-                This argument is required.
+                The value appended to each line of csv output. The default
+                is "\n".
+
+        values
+                  values => [
+                    { member_id  => 1,
+                      first_name => 'Chuck',
+                      last_name  => 'Berry', },
+                  ],
+
+                  # or a list of lists
+                  values => [
+                    [ 1, 'Chuck', 'Berry', ],
+                  ],
+
+                A reference to a list of hash references (such as that
+                returned by the DBI "fetchall_arrayref( {} )" routine), or a
+                reference to a list of list references.
+
+                Either this argument or "iterator" must be provided.
+
+        iterator
+                  iterator => sub {
+                    while ( my @vals = $sth->fetchrow_array() ) {
+                      return \@vals;
+                    }
+                  },
+
+                A reference to a subroutine that is used to generate each
+                row of data. It is passed a reference to the list of fields
+                ("fields") as a parameter and should return a reference to a
+                list (which will be passed to "add_to_xsv()").
+
+                This may be preferred to "values" when the data set is large
+                or expensive to generate up-front. Thanks to Mark Stosberg
+                for suggesting this option.
+
+                Either this argument or "values" must be provided.
 
         get_row_cb
+                  # uppercase all values -- assumes values are hash references
+                  get_row_cb => sub {
+                    my( $row, $fields )= @_;
+
+                    return [ map { uc } @$row{@$fields} ];
+                  },
+
                 A reference to a subroutine used to generate each row of
                 output (other than the header row). Default routines are
                 provided that return each row of "values" in the order
@@ -188,10 +295,11 @@ METHODS
 
                 This subroutine is passed two parameters for each row:
 
-                *           the current row (reference to an array)
+                *           the current row (reference to a list of hashes
+                            or lists)
 
-                *           the field list ("fields" - reference to an
-                            array)
+                *           the field list ("fields" - reference to a list
+                            of hash keys or array indices)
 
 FUNCTIONS
     add_to_xsv
@@ -201,28 +309,29 @@ FUNCTIONS
            my $output;
 
            # $csv is a Text::CSV_XS object
-           foreach( @$values ) {
-              $output .= add_to_xsv( $csv, [ @$_{@headers} ], "\r\n" );
+           foreach my $href ( @$values ) {
+              $output .= add_to_xsv( $csv, [ @{$href}{@headers} ], "\r\n" );
            }
 
         This function, used internally by "xsv_report"/"xsv_report_web",
         formats a list of values for inclusion a csv file. The return value
-        is from "$csv->string()", where $csv is a Text::CSV_XS(3) object.
+        is from "$csv->string()", where $csv is a Text::CSV_XS object.
 
         It takes three parameters:
 
-        *       A Text::CSV_XS(3) object
+        *       A Text::CSV_XS object
 
         *       A reference to a list of values
 
         *       The line ending
 
-        On an error from Text::CSV_XS(3), the function raises an exception.
+        On an error from Text::CSV_XS, the function raises an exception.
 
         On receiving an empty list of values, the function returns the line
         ending only.
 
-        XXX should this return a formatted list of empty fields?
+        Should this return a formatted list of empty fields? Let me know if
+        you think that would be better.
 
     clean_field_names
           my $fields= [ qw/first_name foo bar baz/ ];
@@ -419,22 +528,61 @@ EXAMPLES
           1,2,3
           4,5,6
 
+    Generate each row on the fly (streaming)
+          my @vals = qw(one two three four five six);
+
+          sub get_vals {
+            while ( @vals ) {
+              return [ splice @vals, 0, 3 ]
+            }
+          };
+
+          $report= xsv_report({
+            include_headers => 0,
+            iterator        => \&get_vals,
+          });
+
+          __END__
+          one,two,three
+          four,five,six
+
+    Generate each row on the fly using a DBI iterator
+          my $get_vals = sub {
+            while ( my $list_ref = $sth->fetchrow_arrayref() ) {
+              return $list_ref;
+            }
+          };
+
+          $report= xsv_report({
+            include_headers => 0,
+            iterator        => $get_vals,
+          });
+
 ERROR HANDLING
         The function "add_to_xsv" will raise an exception when
-        "Text::CSV_XS->combine" fails. Please see the Text::CSV_XS(3)
+        "Text::CSV_XS->combine" fails. Please see the Text::CSV_XS
         documentation for details about what type of input causes a failure.
 
 AUTHOR
-    Evan A. Zacks <evan@commonmind.com>
+    Evan A. Zacks "<zackse@cpan.org>"
+
+BUGS
+    Please report any bugs or feature requests to
+    "bug-cgi-application-plugin-output-xsv@rt.cpan.org", or through the web
+    interface at
+    <http://rt.cpan.org/NoAuth/ReportBug.html?Queue=CGI-Application-Plugin-O
+    utput-XSV>. I will be notified, and then you'll automatically be
+    notified of progress on your bug as I make changes.
 
 SEE ALSO
-    Text::CSV_XS(3), CGI::Application(3)
+    Text::CSV_XS, CGI::Application
 
 COPYRIGHT AND LICENSE
-    Copyright (c) 2005 CommonMind, LLC. All rights reserved.
+    Copyright (c) 2006 CommonMind, LLC. All rights reserved.
 
     This program is free software; you can redistribute it and/or modify it
     under the same terms as Perl itself.
 
 REVISION
     $Id$
+

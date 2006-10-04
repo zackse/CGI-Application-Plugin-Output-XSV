@@ -23,5 +23,5 @@ $ENV{CGI_APP_RETURN_ONLY}= 1;
 my $app= XSVTest->new( QUERY => CGI->new({ rm => 'xsv_fail' }) );
 
 throws_ok { $app->run }
-          qr/need array reference values to do anything/i,
+          qr/need array reference of values or iterator to do anything/i,
           'app raises exception without values parameter';

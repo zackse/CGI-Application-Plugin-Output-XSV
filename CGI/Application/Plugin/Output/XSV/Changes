@@ -1,19 +1,23 @@
 Revision history for Perl extension CGI::Application::Plugin::Output::XSV.
 
-0.9   Mon Oct  2 23:27:44 2006
+0.9_01 Wed Oct  4 00:58:01 2006
+        - added "iterator" parameter to allow data set to be generated
+          on the fly (suggested by Mark Stosberg)
+
+0.9    Mon Oct  2 23:27:44 2006
         - fixed bug where empty values list would raise exception
         - additional tests
         - removed duplicate test
 
-0.03  Wed Nov 23 2005
+0.03   Wed Nov 23 2005
         - pod cleanups
         - several more tests
 
-0.02  Thu Sep 22 11:26:07 EDT 2005
+0.02   Thu Sep 22 11:26:07 EDT 2005
         - pod cleanups
 	- updated README
         - fixed broken tests for older CGI.pm, different Perl versions
 
-0.01  Mon Sep 12 21:22:37 2005
+0.01   Mon Sep 12 21:22:37 2005
         - original version; created by h2xs 1.22 with options
           -AX -n CGI::Application::Plugin::Output::XSV

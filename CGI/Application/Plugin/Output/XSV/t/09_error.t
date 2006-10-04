@@ -8,7 +8,7 @@ use Test::More;
 BEGIN {
   eval "use Test::Exception";
   plan skip_all => "Test::Exception required to test die" if $@;
-  plan tests => 16;
+  plan tests => 20;
 }
 
 my $mock;
@@ -28,7 +28,7 @@ BEGIN {
 }
 
 throws_ok { xsv_report() }
-          qr/need array reference values to do anything/i,
+          qr/need array reference of values or iterator to do anything/i,
           'xsv_report: missing values parameter raises exception';
 
 throws_ok { xsv_report( hash => 'value' ) }
@@ -40,7 +40,7 @@ throws_ok { xsv_report_web( hash => 'value' ) }
           'xsv_report: non-hash reference options parameter raises exception';
 
 throws_ok { xsv_report({ values => {} }) }
-          qr/need array reference values to do anything/i,
+          qr/need array reference of values or iterator to do anything/i,
           'xsv_report: invalid values list type raises exception';
 
 throws_ok { xsv_report({ values => [ \*_ ] }) }
@@ -67,11 +67,31 @@ throws_ok { xsv_report({ values => [[1]], headers_cb => sub { 0 } }) }
           qr/can't generate headers/i,
           'xsv_report: empty return from headers_cb raises exception';
 
-# need to unmock for single test
+throws_ok { xsv_report({ include_headers => 0,
+                         iterator => [ qw(one two three) ] }) }
+          qr/need array reference of values or iterator to do anything/i,
+          'xsv_report: non-coderef iterator raises exception';
+
+throws_ok { xsv_report({ include_headers => 0,
+                         iterator => sub { qw(one two three) }, }) }
+          qr/return value from iterator is not an array reference/i,
+          'xsv_report: iterator returning non-array reference raises exception';
+
+throws_ok { xsv_report({ values => [[1]], headers_cb => sub { 1 } }) }
+          qr/return value from headers_cb is not an array reference/i,
+          'xsv_report: non-array reference from headers_cb raises exception';
+
+# need to unmock for a few tests that need Text::CSV_XS
 if ( $mock ) {
   $mock->set_true('combine');
   $mock->set_true('string');
 }
+
+throws_ok { xsv_report({ include_headers => 0,
+                         maximum_iters   => 10,
+                         iterator => sub { [ 1 ] }, }) }
+          qr/iterator exceeded maximum/i,
+          'xsv_report: apparently infinite iterator raises exception';
 
 lives_ok  { xsv_report({ fields => [ qw(foo) ], values => [] }) }
           'xsv_report: empty values list is OK';
