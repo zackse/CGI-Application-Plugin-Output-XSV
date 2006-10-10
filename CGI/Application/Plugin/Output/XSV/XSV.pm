@@ -239,11 +239,7 @@ CGI::Application::Plugin::Output::XSV - generate csv output from a CGI::Applicat
 
   # or, generate the list on the fly:
 
-  sub get_members {
-    while ( my $list_ref = $sth->fetchrow_arrayref() ) {
-      return $list_ref;
-    }
-  }
+  sub get_members { $sth->fetchrow_arrayref() }
 
   return $self->xsv_report_web({
     iterator   => \&get_members,
@@ -344,11 +340,7 @@ available options.
 
   # in a runmode
 
-  sub get_members {
-    while ( my $list_ref = $sth->fetchrow_arrayref() ) {
-      return $list_ref;
-    }
-  }
+  sub get_members { $sth->fetchrow_arrayref() }
 
   my @headers= ("Member ID", "First Name", "Last Name");
 
@@ -470,11 +462,7 @@ Either this argument or C<iterator> must be provided.
 
 =item iterator
 
-  iterator => sub {
-    while ( my @vals = $sth->fetchrow_array() ) {
-      return \@vals;
-    }
-  },
+  iterator => sub { $sth->fetchrow_arrayref() },
 
 A reference to a subroutine that is used to generate each row
 of data. It is passed a reference to the list of fields (C<fields>)
@@ -808,11 +796,7 @@ which is not applicable to this function.
 
 =item Generate each row on the fly using a DBI iterator
 
-  my $get_vals = sub {
-    while ( my $list_ref = $sth->fetchrow_arrayref() ) {
-      return $list_ref;
-    }
-  };
+  my $get_vals = sub { $sth->fetchrow_arrayref() };
 
   $report= xsv_report({
     include_headers => 0,

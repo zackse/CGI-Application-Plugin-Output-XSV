@@ -46,6 +46,7 @@ my $dbh= DBI->connect(
 my $sql = q{
   SELECT dealer_id, company_name, address1, city, state, zipcode
   FROM   dealer
+  WHERE  dealer_id = 277
   ORDER BY company_name
 };
 
@@ -69,17 +70,15 @@ $sth->execute();
 #             "report output (iterator) matches" );
 
 sub get_vals {
-  my $fields_ref = shift;
-
-  while ( my $vals = $sth->fetchrow_arrayref() ) {
-    return $vals;
-  }
+  $sth->fetchrow_arrayref();
 }
 
 $report= xsv_report({
+  include_headers => 0,
   iterator => \&get_vals,
 });
 
-is( $report, "one,two,three\n",
-             "report output (iterator) matches" );
+is( $report,
+    qq{277,"Wave Electronics Inc.","11323 - A Tanner Rd.",Houston,TX,11111\n},
+    "report output (iterator) matches" );
 =cut
