@@ -25,7 +25,7 @@ our %EXPORT_TAGS= (
   all => [ @EXPORT, @EXPORT_OK ],
 );
 
-our $VERSION= '0.9_02';
+our $VERSION= '0.9_03';
 
 ##
 
@@ -148,34 +148,6 @@ sub xsv_report {
 
     $output .= add_to_xsv( $csv, $readable_headers, $opts{line_ending} );
   }
-
-  # XXX always use iterator?
-  # XXX this way, can still use filter row_filter on each row
-  # XXX also need test for supplying both values and iterator
-  # XXX -- should raise exception
-=for later
-  if ( $opts{values} ) {
-    my $i = 0;
-    $opts{iterator} = sub {
-      while ( $i < @{ $opts{values} } ) {
-        return [ $opts{values}[$i++] ];
-      }
-    };
-  }
-
-  while ( my $list_ref = $opts{iterator}->($fields) ) {
-    croak "return value from iterator is not an array reference, aborting"
-      if ref( $list_ref ) ne 'ARRAY';
-
-    # XXX infinite loop?
-    croak "iterator exceeded maximum iterations ($opts{maximum_iters})"
-      if ++$iterations > $opts{maximum_iters};
-
-    $output .= add_to_xsv(
-      $csv, $row_filter->($list_ref, $fields), $opts{line_ending}
-    );
-  }
-=cut
 
   if ( $opts{values} ) {
     foreach my $list_ref ( @{ $opts{values} } ) {

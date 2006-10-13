@@ -1,5 +1,8 @@
 Revision history for Perl extension CGI::Application::Plugin::Output::XSV.
 
+0.9_03 Fri Oct 13 11:36:43 EDT 2006
+        - fixed malformed pod (removed code marked "=for later")
+
 0.9_02 Fri Oct 13 00:59:09 EDT 2006
         - renamed "get_row_cb" parameter to "row_filter"
         - now calling row_filter on rows produced by iterator
