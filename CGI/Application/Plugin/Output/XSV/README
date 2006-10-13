@@ -144,11 +144,7 @@ METHODS
 
           # in a runmode
 
-          sub get_members {
-            while ( my $list_ref = $sth->fetchrow_arrayref() ) {
-              return $list_ref;
-            }
-          }
+          sub get_members { $sth->fetchrow_arrayref() }
 
           my @headers= ("Member ID", "First Name", "Last Name");
 
@@ -263,11 +259,7 @@ METHODS
                 Either this argument or "iterator" must be provided.
 
         iterator
-                  iterator => sub {
-                    while ( my @vals = $sth->fetchrow_array() ) {
-                      return \@vals;
-                    }
-                  },
+                  iterator => sub { $sth->fetchrow_arrayref() },
 
                 A reference to a subroutine that is used to generate each
                 row of data. It is passed a reference to the list of fields
@@ -293,18 +285,26 @@ METHODS
 
                 The default is one million.
 
-        get_row_cb
-                  # uppercase all values -- assumes values are hash references
-                  get_row_cb => sub {
+        row_filter
+                  # uppercase all values -- each row is a list of hash references
+                  row_filter => sub {
                     my( $row, $fields )= @_;
 
                     return [ map { uc } @$row{@$fields} ];
                   },
 
-                A reference to a subroutine used to generate each row of
-                output (other than the header row). Default routines are
-                provided that return each row of "values" in the order
-                specified by "headers".
+                A reference to a subroutine used to filter each row of
+                output (other than the header row). When the "values"
+                parameter is supplied, a default filter is provided that
+                produces each row in the order specified by "headers". For
+                example, the default filter for a "values" list of hash
+                references is shown below.
+
+                  row_filter => sub {
+                    my( $row, $fields )= @_;
+
+                    return [ @$row{@$fields} ];
+                  },
 
                 This subroutine is passed two parameters for each row:
 
@@ -313,6 +313,10 @@ METHODS
 
                 *           the field list ("fields" - reference to a list
                             of hash keys or array indices)
+
+                Note: This parameter used to be named "get_row_cb". That
+                name is deprecated and a warning will be issued if it is
+                used instead of "row_filter".
 
 FUNCTIONS
     add_to_xsv
@@ -518,7 +522,7 @@ EXAMPLES
           return  $self->xsv_report_web({
             fields     => [ qw(foo bar baz) ],
             values     => [ { foo => 1, bar => 2, baz => 3 }, ],
-            get_row_cb => \&plus_one,
+            row_filter => \&plus_one,
           });
 
           __END__
@@ -560,15 +564,21 @@ EXAMPLES
           four,five,six
 
     Generate each row on the fly using a DBI iterator
-          my $get_vals = sub {
-            while ( my $list_ref = $sth->fetchrow_arrayref() ) {
-              return $list_ref;
-            }
-          };
+          my $get_vals = sub { $sth->fetchrow_arrayref() };
 
           $report= xsv_report({
             include_headers => 0,
             iterator        => $get_vals,
+          });
+
+    Use a DBI iterator, increment each value extracted
+          $report= xsv_report({
+            include_headers => 0,
+            iterator        => sub { $sth->fetchrow_arrayref() };
+            row_filter      => sub {
+              my $row = shift;
+              return [ map { $_ + 1 } @{$row} ];
+            },
           });
 
 ERROR HANDLING

@@ -1,6 +1,6 @@
 Revision history for Perl extension CGI::Application::Plugin::Output::XSV.
 
-0.9_02 Fri Oct 13 00:30:25 EDT 2006
+0.9_02 Fri Oct 13 00:59:09 EDT 2006
         - renamed "get_row_cb" parameter to "row_filter"
         - now calling row_filter on rows produced by iterator
         - added DBI tests for iterator interface
