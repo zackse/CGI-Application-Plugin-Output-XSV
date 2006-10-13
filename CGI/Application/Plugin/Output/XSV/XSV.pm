@@ -42,6 +42,7 @@ sub xsv_report {
     fields          => undef,
     values          => undef,
     row_filter      => undef,
+    iterator        => undef,
     line_ending     => "\n",
     csv_opts        => {},
     maximum_iters   => 1_000_000, # XXX reasonable default?
@@ -50,9 +51,14 @@ sub xsv_report {
   my %opts= ( %defaults, %$args );
 
   # deprecated option
-  if ( $opts{get_row_cb} && ! $opts{row_filter} ) {
-    $opts{row_filter} = $opts{get_row_cb};
-    carp "get_row_cb is deprecated, please use row_filter instead";
+  if ( $opts{get_row_cb} ) {
+    if ( $opts{row_filter} ) {
+      carp "ignoring use of deprecated get_row_cb when row_filter specified";
+    }
+    else {
+      $opts{row_filter} = $opts{get_row_cb};
+      carp "get_row_cb is deprecated, please use row_filter instead";
+    }
   }
 
   croak "need array reference of values or iterator to do anything"
@@ -60,8 +66,7 @@ sub xsv_report {
       && ! ( $opts{iterator} && ref( $opts{iterator} ) eq 'CODE'  );
 
   croak "can't supply both values and iterator"
-    if   ( $opts{values}   && ref( $opts{values} )   eq 'ARRAY' )
-      && ( $opts{iterator} && ref( $opts{iterator} ) eq 'CODE'  );
+    if $opts{values} && $opts{iterator};
 
   # list of fields to include in report
   my $fields= [];

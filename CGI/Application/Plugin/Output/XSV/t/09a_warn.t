@@ -8,7 +8,7 @@ use Test::More;
 BEGIN {
   eval "use Test::Warn";
   plan skip_all => "Test::Warn required to test warn" if $@;
-  plan tests => 4;
+  plan tests => 5;
 }
 
 BEGIN {
@@ -35,4 +35,14 @@ warning_like {
 }
   qr/get_row_cb is deprecated/i,
   'xsv_report: warning on use of deprecated get_row_cb parameter';
+
+warning_like {
+  xsv_report({
+    values     => [ [1] ],
+    get_row_cb => sub { [ 1 ] },
+    row_filter => sub { [ 1 ] },
+  })
+}
+  qr/ignoring use of deprecated get_row_cb/i,
+  'xsv_report: warning on use of both get_row_cb and row_filter';
 
