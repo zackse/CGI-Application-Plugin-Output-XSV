@@ -25,7 +25,7 @@ our %EXPORT_TAGS= (
   all => [ @EXPORT, @EXPORT_OK ],
 );
 
-our $VERSION= '0.9_01';
+our $VERSION= '0.9_02';
 
 ##
 
@@ -41,7 +41,7 @@ sub xsv_report {
     include_headers => 1,
     fields          => undef,
     values          => undef,
-    get_row_cb      => undef,
+    row_filter      => undef,
     line_ending     => "\n",
     csv_opts        => {},
     maximum_iters   => 1_000_000, # XXX reasonable default?
@@ -49,17 +49,29 @@ sub xsv_report {
 
   my %opts= ( %defaults, %$args );
 
+  # deprecated option
+  if ( $opts{get_row_cb} && ! $opts{row_filter} ) {
+    $opts{row_filter} = $opts{get_row_cb};
+    carp "get_row_cb is deprecated, please use row_filter instead";
+  }
+
   croak "need array reference of values or iterator to do anything"
     if   ! ( $opts{values}   && ref( $opts{values} )   eq 'ARRAY' )
       && ! ( $opts{iterator} && ref( $opts{iterator} ) eq 'CODE'  );
+
+  croak "can't supply both values and iterator"
+    if   ( $opts{values}   && ref( $opts{values} )   eq 'ARRAY' )
+      && ( $opts{iterator} && ref( $opts{iterator} ) eq 'CODE'  );
 
   # list of fields to include in report
   my $fields= [];
 
   if( $opts{fields} ) {
+    # user-specified
     $fields= $opts{fields};
   }
   elsif( $opts{values} ) {
+    # try to determine field names from provided values
     if ( @{ $opts{values} } ) {
       my $list_type= ref( $opts{values}[0] );
 
@@ -80,30 +92,33 @@ sub xsv_report {
     }
   }
   else {
-    # using iterator, don't need list type
+    # using iterator, empty field list
   }
 
-  # function to retrieve each row of data from $opts{values}
-  my $get_row;
+  # function to filter each row of data from $opts{values}
+  my $row_filter;
 
-  if( $opts{get_row_cb} ) {
-    $get_row= $opts{get_row_cb};
+  if( $opts{row_filter} ) {
+    # user-specified
+    $row_filter= $opts{row_filter};
   }
   elsif ( $opts{values} && @{ $opts{values} } ) {
+    # simple defaults for slices
     my $list_type= ref( $opts{values}[0] );
 
     if( $list_type eq 'HASH' ) {
-      $get_row= sub { my( $row, $fields )= @_; return [ @$row{@$fields} ] };
+      $row_filter= sub { my( $row, $fields )= @_; return [ @$row{@$fields} ] };
     }
     elsif( $list_type eq 'ARRAY' ) {
-      $get_row= sub { my( $row, $fields )= @_; return [ @$row[@$fields] ] };
+      $row_filter= sub { my( $row, $fields )= @_; return [ @$row[@$fields] ] };
     }
     else {
       croak "unknown list type [$list_type]";
     }
   }
   else {
-    # using iterator to generate each row on the fly
+    # using iterator, no filter
+    $row_filter = sub { $_[0] };
   }
 
   my $csv= Text::CSV_XS->new( $opts{csv_opts} );
@@ -129,10 +144,38 @@ sub xsv_report {
     $output .= add_to_xsv( $csv, $readable_headers, $opts{line_ending} );
   }
 
+  # XXX always use iterator?
+  # XXX this way, can still use filter row_filter on each row
+  # XXX also need test for supplying both values and iterator
+  # XXX -- should raise exception
+=for later
+  if ( $opts{values} ) {
+    my $i = 0;
+    $opts{iterator} = sub {
+      while ( $i < @{ $opts{values} } ) {
+        return [ $opts{values}[$i++] ];
+      }
+    };
+  }
+
+  while ( my $list_ref = $opts{iterator}->($fields) ) {
+    croak "return value from iterator is not an array reference, aborting"
+      if ref( $list_ref ) ne 'ARRAY';
+
+    # XXX infinite loop?
+    croak "iterator exceeded maximum iterations ($opts{maximum_iters})"
+      if ++$iterations > $opts{maximum_iters};
+
+    $output .= add_to_xsv(
+      $csv, $row_filter->($list_ref, $fields), $opts{line_ending}
+    );
+  }
+=cut
+
   if ( $opts{values} ) {
     foreach my $list_ref ( @{ $opts{values} } ) {
       $output .= add_to_xsv(
-        $csv, $get_row->($list_ref, $fields), $opts{line_ending}
+        $csv, $row_filter->($list_ref, $fields), $opts{line_ending}
       );
     }
   }
@@ -148,7 +191,9 @@ sub xsv_report {
       croak "iterator exceeded maximum iterations ($opts{maximum_iters})"
         if ++$iterations > $opts{maximum_iters};
 
-      $output .= add_to_xsv( $csv, $list_ref, $opts{line_ending} );
+      $output .= add_to_xsv(
+        $csv, $row_filter->($list_ref, $fields), $opts{line_ending}
+      );
     }
   }
 
@@ -195,7 +240,7 @@ sub clean_field_names {
 
 sub add_to_xsv {
   my( $csv, $fields, $line_ending )= @_;
-  croak "fields argument (required) must be an array reference"
+  croak "add_to_xsv: fields argument (required) must be an array reference"
     if ! ($fields && ref( $fields ) eq 'ARRAY');
 
   # XXX redundant for empty string (or 0)
@@ -488,18 +533,26 @@ prevent a runaway iterator that never returns false.
 
 The default is one million.
 
-=item get_row_cb
+=item row_filter
 
-  # uppercase all values -- assumes values are hash references
-  get_row_cb => sub {
+  # uppercase all values -- each row is a list of hash references
+  row_filter => sub {
     my( $row, $fields )= @_;
 
     return [ map { uc } @$row{@$fields} ];
   },
 
-A reference to a subroutine used to generate each row of output
-(other than the header row). Default routines are provided that
-return each row of C<values> in the order specified by C<headers>.
+A reference to a subroutine used to filter each row of output
+(other than the header row). When the C<values> parameter is
+supplied, a default filter is provided that produces each row
+in the order specified by C<headers>. For example, the default
+filter for a C<values> list of hash references is shown below.
+
+  row_filter => sub {
+    my( $row, $fields )= @_;
+
+    return [ @$row{@$fields} ];
+  },
 
 This subroutine is passed two parameters for each row:
 
@@ -514,6 +567,10 @@ the current row (reference to a list of hashes or lists)
 the field list (C<fields> - reference to a list of hash keys or array indices)
 
 =back
+
+Note: This parameter used to be named C<get_row_cb>. That name is
+deprecated and a warning will be issued if it is used instead of
+C<row_filter>.
 
 =back
 
@@ -751,7 +808,7 @@ which is not applicable to this function.
   return  $self->xsv_report_web({
     fields     => [ qw(foo bar baz) ],
     values     => [ { foo => 1, bar => 2, baz => 3 }, ],
-    get_row_cb => \&plus_one,
+    row_filter => \&plus_one,
   });
 
   __END__
@@ -803,6 +860,16 @@ which is not applicable to this function.
     iterator        => $get_vals,
   });
 
+=item Use a DBI iterator, increment each value extracted
+
+  $report= xsv_report({
+    include_headers => 0,
+    iterator        => sub { $sth->fetchrow_arrayref() };
+    row_filter      => sub {
+      my $row = shift;
+      return [ map { $_ + 1 } @{$row} ];
+    },
+  });
 
 =back
 

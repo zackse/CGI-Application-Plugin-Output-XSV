@@ -8,7 +8,7 @@ use Test::More;
 BEGIN {
   eval "use Test::Exception";
   plan skip_all => "Test::Exception required to test die" if $@;
-  plan tests => 20;
+  plan tests => 21;
 }
 
 my $mock;
@@ -66,6 +66,10 @@ throws_ok { xsv_report({ values => [[1]], headers_cb => 1 }) }
 throws_ok { xsv_report({ values => [[1]], headers_cb => sub { 0 } }) }
           qr/can't generate headers/i,
           'xsv_report: empty return from headers_cb raises exception';
+
+throws_ok { xsv_report({ values   => [[1]], iterator => sub { [1] } }) }
+          qr/can't supply both values and iterator/i,
+          'xsv_report: specifying both values and iterator raises exception';
 
 throws_ok { xsv_report({ include_headers => 0,
                          iterator => [ qw(one two three) ] }) }

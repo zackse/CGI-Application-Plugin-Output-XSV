@@ -8,7 +8,7 @@ use Test::More;
 BEGIN {
   eval "use Test::Warn";
   plan skip_all => "Test::Warn required to test warn" if $@;
-  plan tests => 3;
+  plan tests => 4;
 }
 
 BEGIN {
@@ -26,4 +26,13 @@ warning_like {
 }
   qr/passing empty fields list to headers_cb/i,
   'xsv_report: warning on empty fields list with headers callback';
+
+warning_like {
+  xsv_report({
+    values     => [ [1] ],
+    get_row_cb => sub { [ 1 ] },
+  })
+}
+  qr/get_row_cb is deprecated/i,
+  'xsv_report: warning on use of deprecated get_row_cb parameter';
 
