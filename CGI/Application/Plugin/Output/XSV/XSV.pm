@@ -25,17 +25,17 @@ our %EXPORT_TAGS= (
   all => [ @EXPORT, @EXPORT_OK ],
 );
 
-our $VERSION= '0.9_03';
+our $VERSION= '1.00';
 
 ##
 
 sub xsv_report {
-  my $args= shift || {};
+  my $args = shift || {};
 
   croak "argument to xsv_report must be a hash reference"
     if ref( $args ) ne 'HASH';
 
-  my %defaults= (
+  my %defaults = (
     headers         => undef,
     headers_cb      => \&clean_field_names,
     include_headers => 1,
@@ -48,7 +48,7 @@ sub xsv_report {
     maximum_iters   => 1_000_000, # XXX reasonable default?
   );
 
-  my %opts= ( %defaults, %$args );
+  my %opts = ( %defaults, %$args );
 
   # deprecated option
   if ( $opts{get_row_cb} ) {
@@ -69,24 +69,24 @@ sub xsv_report {
     if $opts{values} && $opts{iterator};
 
   # list of fields to include in report
-  my $fields= [];
+  my $fields = [];
 
-  if( $opts{fields} ) {
+  if ( $opts{fields} ) {
     # user-specified
-    $fields= $opts{fields};
+    $fields = $opts{fields};
   }
-  elsif( $opts{values} ) {
+  elsif ( $opts{values} ) {
     # try to determine field names from provided values
     if ( @{ $opts{values} } ) {
-      my $list_type= ref( $opts{values}[0] );
+      my $list_type = ref( $opts{values}[0] );
 
       # field list from first entry in value list
-      if( $list_type eq 'HASH' ) {
-        $fields= [ keys %{ $opts{values}[0] } ];
+      if ( $list_type eq 'HASH' ) {
+        $fields = [ keys %{ $opts{values}[0] } ];
       }
       # or simply array indices
-      elsif( $list_type eq 'ARRAY' ) {
-        $fields= [ 0..$#{$opts{values}[0]} ];
+      elsif ( $list_type eq 'ARRAY' ) {
+        $fields = [ 0..$#{$opts{values}[0]} ];
       }
       else {
         croak "unknown list type [$list_type]";
@@ -103,19 +103,19 @@ sub xsv_report {
   # function to filter each row of data from $opts{values}
   my $row_filter;
 
-  if( $opts{row_filter} ) {
+  if ( $opts{row_filter} ) {
     # user-specified
-    $row_filter= $opts{row_filter};
+    $row_filter = $opts{row_filter};
   }
   elsif ( $opts{values} && @{ $opts{values} } ) {
     # simple defaults for slices
-    my $list_type= ref( $opts{values}[0] );
+    my $list_type = ref( $opts{values}[0] );
 
-    if( $list_type eq 'HASH' ) {
-      $row_filter= sub { my( $row, $fields )= @_; return [ @$row{@$fields} ] };
+    if ( $list_type eq 'HASH' ) {
+      $row_filter = sub { my ($row, $fields)= @_; return [ @$row{@$fields} ] };
     }
-    elsif( $list_type eq 'ARRAY' ) {
-      $row_filter= sub { my( $row, $fields )= @_; return [ @$row[@$fields] ] };
+    elsif ( $list_type eq 'ARRAY' ) {
+      $row_filter = sub { my ($row, $fields)= @_; return [ @$row[@$fields] ] };
     }
     else {
       croak "unknown list type [$list_type]";
@@ -126,11 +126,11 @@ sub xsv_report {
     $row_filter = sub { $_[0] };
   }
 
-  my $csv= Text::CSV_XS->new( $opts{csv_opts} );
+  my $csv = Text::CSV_XS->new( $opts{csv_opts} );
   my $output;
 
-  if( $opts{include_headers} ) {
-    if( ! $opts{headers} ) {
+  if ( $opts{include_headers} ) {
+    if ( ! $opts{headers} ) {
       if ( ! ($opts{headers_cb} && ref( $opts{headers_cb} ) eq 'CODE') ) {
         croak "need headers or headers_cb to include headers";
       }
@@ -140,11 +140,11 @@ sub xsv_report {
     }
 
     # formatted column headers
-    my $readable_headers= $opts{headers} || $opts{headers_cb}->( $fields )
+    my $readable_headers = $opts{headers} || $opts{headers_cb}->( $fields )
       or croak "can't generate headers";
 
     croak "return value from headers_cb is not an array reference, aborting"
-      if ref( $readable_headers ) ne 'ARRAY';
+      if ref ( $readable_headers ) ne 'ARRAY';
 
     $output .= add_to_xsv( $csv, $readable_headers, $opts{line_ending} );
   }
@@ -181,17 +181,17 @@ sub xsv_report {
 # same params as xsv_report, plus
 #   filename => 'download.csv',
 sub xsv_report_web {
-  my( $self, $args )= @_;
+  my ($self, $args) = @_;
   $args ||= {};
 
   croak "argument to xsv_report_web must be a hash reference"
     if ref( $args ) ne 'HASH';
 
-  my %defaults= (
+  my %defaults = (
     filename => 'download.csv',
   );
 
-  my %opts= ( %defaults, %$args );
+  my %opts = ( %defaults, %$args );
 
   $self->header_props(
     -type                  => 'application/x-csv',
@@ -205,10 +205,10 @@ sub xsv_report_web {
 # default field name generator:
 #   underscores to spaces, upper case first letter of each word
 sub clean_field_names {
-  my $fields= shift;
+  my $fields = shift;
 
   # using temp var to avoid modifying $fields
-  my @fields_copy= @$fields;
+  my @fields_copy = @{$fields};
 
   return [
     map { tr/_/ /; s/\b(\w+)/\u$1/g; $_ } @fields_copy
@@ -216,7 +216,7 @@ sub clean_field_names {
 }
 
 sub add_to_xsv {
-  my( $csv, $fields, $line_ending )= @_;
+  my ($csv, $fields, $line_ending) = @_;
   croak "add_to_xsv: fields argument (required) must be an array reference"
     if ! ($fields && ref( $fields ) eq 'ARRAY');
 
@@ -225,8 +225,8 @@ sub add_to_xsv {
 
   return $line_ending if ! @{$fields};
 
-  $csv->combine( @$fields )
-    or croak "Failed to add [@$fields] to csv: " . $csv->error_input();
+  $csv->combine( @{$fields} )
+    or croak "Failed to add [@{$fields}] to csv: " . $csv->error_input();
 
   return $csv->string() . $line_ending;
 }
@@ -247,9 +247,9 @@ CGI::Application::Plugin::Output::XSV - generate csv output from a CGI::Applicat
   # in some runmode...
 
   # $sth is a prepared DBI statement handle
-  my $members= $sth->fetchall_arrayref( {} );
+  my $members = $sth->fetchall_arrayref( {} );
 
-  my @headers= qw( member_id first_name last_name ... );
+  my @headers = qw( member_id first_name last_name ... );
 
   return $self->xsv_report_web({
     fields     => \@headers,
@@ -286,27 +286,27 @@ You may export all four routines by specifying the export tag C<:all>:
 
 On many websites, I had code to retrieve a list of data items for use
 in an L<HTML::Template|HTML::Template(3)> TMPL_LOOP. Usually this code
-would use the L<DBI|DBI(3)> routine C<fetchall_arrayref( {} )> to get a
+would use the L<DBI|DBI(3)> routine C<fetchall_arrayref()> to get a
 list of hash references, one for each data item.
 
-  my $users= $sth->fetchall_arrayref( {} );
+  my $users = $sth->fetchall_arrayref( {} );
 
-  my $template= $self->load_tmpl( ... );
+  my $template = $self->load_tmpl( ... );
 
   $template->param( users => $users );
 
   return $template->output;
 
-Inevitably, the client would ask for a data format they could load
-in Excel, so I'd add another runmode for a csv export. This runmode
-almost always looked the same:
+At some point, it would become apparent that an "export to spreadsheet"
+feature would be useful, so I'd add another runmode, which almost always
+looked the same:
 
-    my @fields= qw(keys to each data item);
+    my @fields = qw(keys to each data item);
 
-    my $csv= Text::CSV_XS->new();
+    my $csv = Text::CSV_XS->new();
 
-    foreach( @$users ) {
-      $csv->combine( [ @$_{ @fields } ] );
+    foreach my $user ( @{$users} ) {
+      $csv->combine( [ @{$user}{@fields} ] );
       $output .= $csv->string() . "\n";
     }
 
@@ -322,7 +322,7 @@ that wraps the above code while offering a fair amount of programmer
 flexibility.
 
 For example, the programmer may control the naming of header columns,
-filter each line of output before it is passed to L<Text::CSV_XS|Text::CSV_XS(3)>,
+filter each row of data before it is passed to L<Text::CSV_XS|Text::CSV_XS(3)>,
 and set the filename that is supplied to the user's browser.
 
 Please see the documentation below for C<xsv_report_web> for a list of
@@ -338,16 +338,16 @@ available options.
 
   # in a runmode
 
-  my @members= (
+  my @members = (
     { member_id  => 1,
       first_name => 'Chuck',
       last_name  => 'Berry', },
     ...
   );
 
-  my @headers= ("Member ID", "First Name", "Last Name");
+  my @headers = ("Member ID", "First Name", "Last Name");
 
-  my @fields = qw(member_id first_name last_name);
+  my @fields  = qw(member_id first_name last_name);
 
   return $self->xsv_report_web({
     fields     => \@fields,
@@ -364,7 +364,7 @@ available options.
 
   sub get_members { $sth->fetchrow_arrayref() }
 
-  my @headers= ("Member ID", "First Name", "Last Name");
+  my @headers = ("Member ID", "First Name", "Last Name");
 
   return $self->xsv_report_web({
     headers    => \@headers,
@@ -395,6 +395,9 @@ L<Text::CSV_XS|Text::CSV_XS(3)>. The default is an empty hash.
 =item fields
 
   fields => [ qw(member_id first_name last_name) ],
+
+  # or array indices
+  fields => [ 1, 2, 0 ],
 
 A reference to a list of field names or array indices. This parameter
 specifies the order of fields in each row of output.
@@ -431,10 +434,10 @@ as a parameter to generate column headers.
 
   # replace underscores with spaces
   headers_cb => sub {
-    my $fields= shift;
+    my $fields = shift;
 
     # using temp var to avoid modifying $fields
-    my @fields_copy= @$fields;
+    my @fields_copy = @{$fields};
 
     return [
       map { tr/_/ /; $_ } @fields_copy
@@ -512,23 +515,25 @@ The default is one million.
 
 =item row_filter
 
-  # uppercase all values -- each row is a list of hash references
+  # uppercase all values
+  # (each row is a list of hash references)
   row_filter => sub {
-    my( $row, $fields )= @_;
+    my ($row, $fields) = @_;
 
-    return [ map { uc } @$row{@$fields} ];
+    return [ map { uc } @{$row}{@$fields} ];
   },
 
-A reference to a subroutine used to filter each row of output
-(other than the header row). When the C<values> parameter is
+A reference to a subroutine used to filter each row of data
+(other than the header row) before it is passed to C<add_to_xsv>.
+When the C<values> parameter is
 supplied, a default filter is provided that produces each row
 in the order specified by C<headers>. For example, the default
 filter for a C<values> list of hash references is shown below.
 
   row_filter => sub {
-    my( $row, $fields )= @_;
+    my ($row, $fields) = @_;
 
-    return [ @$row{@$fields} ];
+    return [ @{$row}{@$fields} ];
   },
 
 This subroutine is passed two parameters for each row:
@@ -560,12 +565,12 @@ C<row_filter>.
 =item B<add_to_xsv>
 
    # $sth is a prepared DBI statement handle
-   my $values= $sth->fetchall_arrayref( {} );
-   my @headers= qw/foo bar baz/;
+   my $values  = $sth->fetchall_arrayref( {} );
+   my @headers = qw/foo bar baz/;
    my $output;
 
    # $csv is a Text::CSV_XS object
-   foreach my $href ( @$values ) {
+   foreach my $href ( @{$values} ) {
       $output .= add_to_xsv( $csv, [ @{$href}{@headers} ], "\r\n" );
    }
 
@@ -596,13 +601,10 @@ On an error from L<Text::CSV_XS|Text::CSV_XS(3)>, the function raises an excepti
 On receiving an empty list of values, the function returns the
 line ending only.
 
-Should this return a formatted list of empty fields? Let me know if you
-think that would be better.
-
 =item B<clean_field_names>
 
-  my $fields= [ qw/first_name foo bar baz/ ];
-  my $headers= clean_field_names( $fields );
+  my $fields  = [ qw/first_name foo bar baz/ ];
+  my $headers = clean_field_names( $fields );
 
   # $headers is now [ 'First Name', 'Foo', 'Bar', 'Baz' ]
 
@@ -619,11 +621,11 @@ if the C<headers_cb> parameter is not supplied.
 =item B<xsv_report>
 
   # $sth is a prepared DBI statement handle
-  my $members= $sth->fetchall_arrayref( {} );
+  my $members = $sth->fetchall_arrayref( {} );
 
-  my @headers= qw( member_id first_name last_name ... );
+  my @headers = qw( member_id first_name last_name ... );
 
-  my $output= $self->xsv_report({
+  my $output = $self->xsv_report({
     fields     => \@headers,
     values     => $members,
     csv_opts   => { sep_char => "\t" },
@@ -719,7 +721,7 @@ which is not applicable to this function.
     ],
     fields          => [ qw(first_name last_name phone) ],
     headers_cb      => sub {
-      my @h= @{ +shift };
+      my @h = @{ +shift };
       s/_name$// foreach @h;
       return \@h;
     },
@@ -775,14 +777,14 @@ which is not applicable to this function.
 =item Filter data as it is processed
 
   sub plus_one {
-    my( $row, $fields )= @_;
+    my ($row, $fields) = @_;
 
-    return [ map { $_ + 1 } @$row{@$fields} ];
+    return [ map { $_ + 1 } @{$row}{@$fields} ];
   }
 
   # each row (other than header row) will be
   # passed through plus_one()
-  return  $self->xsv_report_web({
+  return $self->xsv_report_web({
     fields     => [ qw(foo bar baz) ],
     values     => [ { foo => 1, bar => 2, baz => 3 }, ],
     row_filter => \&plus_one,
@@ -819,7 +821,7 @@ which is not applicable to this function.
     }
   };
 
-  $report= xsv_report({
+  $self->xsv_report_web({
     include_headers => 0,
     iterator        => \&get_vals,
   });
@@ -832,14 +834,14 @@ which is not applicable to this function.
 
   my $get_vals = sub { $sth->fetchrow_arrayref() };
 
-  $report= xsv_report({
+  $self->xsv_report_web({
     include_headers => 0,
     iterator        => $get_vals,
   });
 
 =item Use a DBI iterator, increment each value extracted
 
-  $report= xsv_report({
+  $self->xsv_report_web({
     include_headers => 0,
     iterator        => sub { $sth->fetchrow_arrayref() };
     row_filter      => sub {
@@ -852,13 +854,9 @@ which is not applicable to this function.
 
 =head1 ERROR HANDLING
 
-=over 4
-
 The function C<add_to_xsv> will raise an exception when
 C<< Text::CSV_XS->combine >> fails. Please see the L<Text::CSV_XS|Text::CSV_XS(3)>
 documentation for details about what type of input causes a failure.
-
-=back
 
 =head1 AUTHOR
 
