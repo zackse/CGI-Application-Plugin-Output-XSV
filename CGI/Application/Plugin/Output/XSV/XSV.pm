@@ -149,25 +149,23 @@ sub xsv_report {
     croak "return value from headers_cb is not an array reference, aborting"
       if ref ( $readable_headers ) ne 'ARRAY';
 
+    $output .= add_to_xsv( $csv, $readable_headers, $opts{line_ending} );
+
     if ( $opts{stream} ) {
-      print add_to_xsv( $csv, $readable_headers, $opts{line_ending} );
-    }
-    else {
-      $output .= add_to_xsv( $csv, $readable_headers, $opts{line_ending} );
+      print $output;
+      $output = '';
     }
   }
 
   if ( $opts{values} ) {
     foreach my $list_ref ( @{ $opts{values} } ) {
+      $output .= add_to_xsv(
+        $csv, $row_filter->($list_ref, $fields), $opts{line_ending}
+      );
+
       if ( $opts{stream} ) {
-        print add_to_xsv(
-          $csv, $row_filter->($list_ref, $fields), $opts{line_ending}
-        );
-      }
-      else {
-        $output .= add_to_xsv(
-          $csv, $row_filter->($list_ref, $fields), $opts{line_ending}
-        );
+        print $output;
+        $output = '';
       }
     }
   }
@@ -183,15 +181,13 @@ sub xsv_report {
       croak "iterator exceeded maximum iterations ($opts{maximum_iters})"
         if ++$iterations > $opts{maximum_iters};
 
+      $output .= add_to_xsv(
+        $csv, $row_filter->($list_ref, $fields), $opts{line_ending}
+      );
+
       if ( $opts{stream} ) {
-        print add_to_xsv(
-          $csv, $row_filter->($list_ref, $fields), $opts{line_ending}
-        );
-      }
-      else {
-        $output .= add_to_xsv(
-          $csv, $row_filter->($list_ref, $fields), $opts{line_ending}
-        );
+        print $output;
+        $output = '';
       }
     }
   }
