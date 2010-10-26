@@ -19,6 +19,7 @@ t/09_error.t
 t/09a_warn.t
 t/10_iterator.t
 t/11_iterator_dbi.t
+t/12_stream.t
 t/pod.t
 t/pod_coverage.t
 t/XSVTest.pm

@@ -1,5 +1,9 @@
 Revision history for Perl extension CGI::Application::Plugin::Output::XSV.
 
+1.01   Mon Oct 25 22:23:02 EDT 2010
+        - option to stream output rather than collecting and returning
+          to caller (RT #62449, suggested by Rhesa Rozendaal)
+
 1.00   Fri Oct 20 00:04:17 EDT 2006
         - minor documentation and code formatting updates
 

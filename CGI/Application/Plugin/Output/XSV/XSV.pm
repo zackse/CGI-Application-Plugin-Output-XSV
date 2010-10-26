@@ -1,5 +1,3 @@
-# $Id$
-
 package CGI::Application::Plugin::Output::XSV;
 
 use strict;
@@ -25,7 +23,7 @@ our %EXPORT_TAGS= (
   all => [ @EXPORT, @EXPORT_OK ],
 );
 
-our $VERSION= '1.00';
+our $VERSION= '1.01';
 
 ##
 
@@ -46,9 +44,14 @@ sub xsv_report {
     line_ending     => "\n",
     csv_opts        => {},
     maximum_iters   => 1_000_000, # XXX reasonable default?
+    stream          => 0,
   );
 
   my %opts = ( %defaults, %$args );
+
+  my $was_buffering = $|;
+  local $| = $was_buffering;
+  $| = 1 if $opts{stream};
 
   # deprecated option
   if ( $opts{get_row_cb} ) {
@@ -127,7 +130,7 @@ sub xsv_report {
   }
 
   my $csv = Text::CSV_XS->new( $opts{csv_opts} );
-  my $output;
+  my $output = '';
 
   if ( $opts{include_headers} ) {
     if ( ! $opts{headers} ) {
@@ -146,14 +149,26 @@ sub xsv_report {
     croak "return value from headers_cb is not an array reference, aborting"
       if ref ( $readable_headers ) ne 'ARRAY';
 
-    $output .= add_to_xsv( $csv, $readable_headers, $opts{line_ending} );
+    if ( $opts{stream} ) {
+      print add_to_xsv( $csv, $readable_headers, $opts{line_ending} );
+    }
+    else {
+      $output .= add_to_xsv( $csv, $readable_headers, $opts{line_ending} );
+    }
   }
 
   if ( $opts{values} ) {
     foreach my $list_ref ( @{ $opts{values} } ) {
-      $output .= add_to_xsv(
-        $csv, $row_filter->($list_ref, $fields), $opts{line_ending}
-      );
+      if ( $opts{stream} ) {
+        print add_to_xsv(
+          $csv, $row_filter->($list_ref, $fields), $opts{line_ending}
+        );
+      }
+      else {
+        $output .= add_to_xsv(
+          $csv, $row_filter->($list_ref, $fields), $opts{line_ending}
+        );
+      }
     }
   }
   # using iterator
@@ -168,9 +183,16 @@ sub xsv_report {
       croak "iterator exceeded maximum iterations ($opts{maximum_iters})"
         if ++$iterations > $opts{maximum_iters};
 
-      $output .= add_to_xsv(
-        $csv, $row_filter->($list_ref, $fields), $opts{line_ending}
-      );
+      if ( $opts{stream} ) {
+        print add_to_xsv(
+          $csv, $row_filter->($list_ref, $fields), $opts{line_ending}
+        );
+      }
+      else {
+        $output .= add_to_xsv(
+          $csv, $row_filter->($list_ref, $fields), $opts{line_ending}
+        );
+      }
     }
   }
 
@@ -193,10 +215,19 @@ sub xsv_report_web {
 
   my %opts = ( %defaults, %$args );
 
-  $self->header_props(
+  my %headers = (
     -type                  => 'application/x-csv',
     '-content-disposition' => "attachment; filename=$opts{filename}",
   );
+
+  # we're doing our own output
+  if ( $opts{stream} ) {
+    $self->header_type('none');
+    print $self->query->header( %headers );
+  }
+  else {
+    $self->header_props( %headers );
+  }
 
   # consider use of magic goto in case of croak() inside xsv_report
   return xsv_report( \%opts );
@@ -314,7 +345,7 @@ looked the same:
       -type                  => 'application/x-csv',
       '-content-disposition' => "attachment; filename=export.csv",
     );
-    
+
     return $output;
 
 The purpose of this module is to provide a simple method, C<xsv_report_web>,
@@ -371,6 +402,7 @@ available options.
     iterator   => \&get_members,
     csv_opts   => { sep_char => "\t" },
     filename   => 'members.csv',
+    stream     => 1,
   });
 
 This method generates a csv file that is sent directly to the user's
@@ -553,6 +585,22 @@ the field list (C<fields> - reference to a list of hash keys or array indices)
 Note: This parameter used to be named C<get_row_cb>. That name is
 deprecated and a warning will be issued if it is used instead of
 C<row_filter>.
+
+=item stream
+
+  stream => 1,
+
+This flag controls whether or not output is printed immediately or
+collected and returned to the caller. Set to a true value to remove
+buffering on STDOUT and to emit output as it is generated. This can
+save memory in the case of a large document, for example.
+
+The default is false to retain backwards-compatibility. In general, it
+is probably more efficient to set this to a true value, but note that it
+breaks with the standard L<CGI::Application|CGI::Application(3)>
+convention of returning generated content from your runmodes rather than
+printing it yourself.
+
 
 =back
 
@@ -811,7 +859,7 @@ which is not applicable to this function.
   1,2,3
   4,5,6
 
-=item Generate each row on the fly (streaming)
+=item Generate each row on the fly
 
   my @vals = qw(one two three four five six);
 
@@ -876,13 +924,9 @@ L<Text::CSV_XS>, L<CGI::Application>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2006 CommonMind, LLC. All rights reserved.
+Copyright (c) 2006,2010 CommonMind, LLC. All rights reserved.
 
 This program is free software; you can redistribute it
 and/or modify it under the same terms as Perl itself.
-
-=head1 REVISION
-
-$Id$
 
 =cut

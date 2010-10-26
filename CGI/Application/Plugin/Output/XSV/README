@@ -47,6 +47,7 @@ SYNOPSIS
         filename   => 'members.csv',
       });
 
+
       # or, generate the list on the fly:
 
       sub get_members { $sth->fetchrow_arrayref() }
@@ -100,7 +101,7 @@ PURPOSE
           -type                  => 'application/x-csv',
           '-content-disposition' => "attachment; filename=export.csv",
         );
-    
+
         return $output;
 
     The purpose of this module is to provide a simple method,
@@ -139,6 +140,7 @@ METHODS
             filename   => 'members.csv',
           });
 
+
           ## METHOD 2. Generate list on the fly
 
           # in a runmode
@@ -152,6 +154,7 @@ METHODS
             iterator   => \&get_members,
             csv_opts   => { sep_char => "\t" },
             filename   => 'members.csv',
+            stream     => 1,
           });
 
         This method generates a csv file that is sent directly to the user's
@@ -321,6 +324,21 @@ METHODS
                 Note: This parameter used to be named "get_row_cb". That
                 name is deprecated and a warning will be issued if it is
                 used instead of "row_filter".
+
+        stream
+                  stream => 1,
+
+                This flag controls whether or not output is printed
+                immediately or collected and returned to the caller. Set to
+                a true value to remove buffering on STDOUT and to emit
+                output as it is generated. This can save memory in the case
+                of a large document, for example.
+
+                The default is false to retain backwards-compatibility. In
+                general, it is probably more efficient to set this to a true
+                value, but note that it breaks with the standard
+                CGI::Application convention of returning generated content
+                from your runmodes rather than printing it yourself.
 
 FUNCTIONS
     add_to_xsv
@@ -546,7 +564,7 @@ EXAMPLES
           1,2,3
           4,5,6
 
-    Generate each row on the fly (streaming)
+    Generate each row on the fly
           my @vals = qw(one two three four five six);
 
           sub get_vals {
@@ -602,10 +620,8 @@ SEE ALSO
     Text::CSV_XS, CGI::Application
 
 COPYRIGHT AND LICENSE
-    Copyright (c) 2006 CommonMind, LLC. All rights reserved.
+    Copyright (c) 2006,2010 CommonMind, LLC. All rights reserved.
 
     This program is free software; you can redistribute it and/or modify it
     under the same terms as Perl itself.
 
-REVISION
-    $Id$
