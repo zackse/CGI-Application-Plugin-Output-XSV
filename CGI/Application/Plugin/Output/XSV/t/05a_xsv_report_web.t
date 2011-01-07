@@ -16,7 +16,7 @@ my $app= XSVTest->new;
 ok( my $report= $app->run, 'app runs OK' );
 
 my $expected= qr{(?i)Content-disposition(?-i): attachment; filename=download.csv\s+
-Content-Type: application/x-csv\s+
+Content-Type: application/x-csv(?:;\s+charset=\S+)?\s+
 \s+
 fOO,bAR,bAZ
 1,2,3
@@ -30,7 +30,7 @@ $app= XSVTest->new( PARAMS => { filename => 'myfilename.csv' } );
 ok( $report= $app->run, 'app runs OK' );
 
 $expected= qr{(?i)Content-disposition(?-i): attachment; filename=myfilename.csv\s+
-Content-Type: application/x-csv\s+
+Content-Type: application/x-csv(?:;\s+charset=\S+)?\s+
 \s+
 fOO,bAR,bAZ
 1,2,3
