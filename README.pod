@@ -1,6 +1,7 @@
 README for CGI::Application::Plugin::Output::XSV
 
 =for HTML <a href="https://travis-ci.org/zackse/CGI-Application-Plugin-Output-XSV"><img src="https://travis-ci.org/zackse/CGI-Application-Plugin-Output-XSV.svg?branch=master"></a>
+<a href='https://coveralls.io/r/zackse/CGI-Application-Plugin-Output-XSV?branch=master'><img src='https://coveralls.io/repos/zackse/CGI-Application-Plugin-Output-XSV/badge.svg?branch=master' alt='Coverage Status' /></a>
 
 =head1 NAME
 
