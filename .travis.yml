@@ -10,12 +10,17 @@ perl:
 
 # optional dependencies
 before_install:
-    - cpanm --quiet --notest DBD::Sponge Test::MockObject Test::Exception Test::Pod Test::Pod::Coverage
+    - cpanm --quiet --notest DBD::Sponge Test::MockObject Test::Exception Test::Pod Test::Pod::Coverage Devel::Cover::Report::Coveralls
 
 install:
     - cpanm --verbose --notest --installdeps ./CGI/Application/Plugin/Output/XSV
 
-script: "cd CGI/Application/Plugin/Output/XSV && perl Build.PL && ./Build test"
+script:
+    - "cd CGI/Application/Plugin/Output/XSV && perl Build.PL && PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine ./Build test"
+    - cover
+
+after_success:
+    - cover -report coveralls
 
 notifications:
   recipients:
