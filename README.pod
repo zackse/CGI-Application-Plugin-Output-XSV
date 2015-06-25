@@ -1,5 +1,7 @@
 README for CGI::Application::Plugin::Output::XSV
 
+=for HTML <a href="https://travis-ci.org/zackse/CGI-Application-Plugin-Output-XSV"><img src="https://travis-ci.org/zackse/CGI-Application-Plugin-Output-XSV.svg?branch=master"></a>
+
 INSTALLATION
 
 To install this module, run the following commands:

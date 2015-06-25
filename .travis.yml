@@ -1,0 +1,25 @@
+language: perl
+perl:
+    - "5.20"
+    - "5.18"
+    - "5.16"
+    - "5.14"
+    - "5.12"
+    - "5.10"
+    - "5.8"
+
+# optional dependencies
+before_install:
+    - cpanm --quiet --notest DBD::Sponge Test::MockObject Test::Exception Test::Pod Test::Pod::Coverage
+
+install:
+    - cpanm --verbose --notest --installdeps ./CGI/Application/Plugin/Output/XSV
+
+script: "cd CGI/Application/Plugin/Output/XSV && perl Build.PL && ./Build test"
+
+notifications:
+  recipients:
+    - zackse@cpan.org
+  email:
+    on_success: change
+    on_failure: always
