@@ -16,7 +16,7 @@ install:
     - cpanm --verbose --notest --installdeps ./CGI/Application/Plugin/Output/XSV
 
 script:
-    - "cd CGI/Application/Plugin/Output/XSV && perl Build.PL && PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine ./Build test"
+    - "cd CGI/Application/Plugin/Output/XSV && perl Build.PL && ./Build testcover"
     - cover
 
 after_success:
